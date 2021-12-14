@@ -1,0 +1,292 @@
+ package programming;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+class Course {
+	private String name;
+	private String category;
+	private int reviewScore;
+	private int noOfStudents;
+
+	public Course(String name, String category, int reviewScore, int noOfStudents) {
+		super();
+		this.name = name;
+		this.category = category;
+		this.reviewScore = reviewScore;
+		this.noOfStudents = noOfStudents;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getCategory() {
+		return category;
+	}
+
+	public void setCategory(String category) {
+		this.category = category;
+	}
+
+	public int getReviewScore() {
+		return reviewScore;
+	}
+
+	public void setReviewScore(int reviewScore) {
+		this.reviewScore = reviewScore;
+	}
+
+	public int getNoOfStudents() {
+		return noOfStudents;
+	}
+
+	public void setNoOfStudents(int noOfStudents) {
+		this.noOfStudents = noOfStudents;
+	}
+
+	@Override
+	public String toString() {
+		return "Course [name=" + name + ", category=" + category + ", reviewScore=" + reviewScore + ", noOfStudents="
+				+ noOfStudents + "]";
+	}
+
+}
+
+public class FP04CustomClass {
+
+	public static void main(String[] args) {
+		List<Course> courses = List.of(new Course("Spring", "Framework", 98, 20000),
+				new Course("Spring Boot", "Framework", 95, 18000), new Course("API", "Microservices", 97, 22000),
+				new Course("Microservices", "Microservices", 96, 25000),
+				new Course("FullStack", "FullStack", 91, 14000), new Course("AWS", "Cloud", 92, 21000),
+				new Course("Azure", "Cloud", 99, 21000), new Course("Docker", "Cloud", 92, 20000),
+				new Course("Kubernetes", "Cloud", 91, 20000));
+		System.out.print("original list og cource "+courses ) ;
+		
+//----------------------------------------------------------------------------------------		
+		// allMatch, noneMatch, anyMatch
+		Predicate<Course> reviewScoreGreaterThan95Predicate 
+			= course -> course.getReviewScore() > 95;
+
+		Predicate<Course> reviewScoreGreaterThan90Predicate 
+			= course -> course.getReviewScore() > 90;
+			
+		Predicate<Course> reviewScoreLessThan90Predicate 
+			= course -> course.getReviewScore() < 90;
+			
+//this is the return put of anyMatch ,anyMatch ,noneMatch ,anyMatch			
+		boolean anyMatch = courses.stream().anyMatch(reviewScoreGreaterThan95Predicate);
+		System.out.println(anyMatch);
+		// print will be true or faulse
+		System.out.println(courses.stream().allMatch(reviewScoreGreaterThan95Predicate));
+		
+		System.out.println(courses.stream().noneMatch(reviewScoreLessThan90Predicate));
+		
+		System.out.println(courses.stream().anyMatch(reviewScoreLessThan90Predicate));
+		
+		
+//-----------------------------------------------------------------------------------------		
+		Comparator<Course> comparingByNoOfStudentsIncreasing 
+					= Comparator.comparingInt(Course::getNoOfStudents);
+		
+		
+		System.out.println("comparetor on numver of student enrolled default asc order"+
+				courses.stream()
+				.sorted(comparingByNoOfStudentsIncreasing)
+				.collect(Collectors.toList()));
+		
+
+		Comparator<Course> comparingByNoOfStudentsDecreasing 
+					= Comparator.comparingInt(Course::getNoOfStudents).reversed();
+		
+		System.out.println("comparetor on number of student enrolled default desc order by reverseing the asc list order" +
+				courses.stream()
+				.sorted(comparingByNoOfStudentsDecreasing)
+				.collect(Collectors.toList()));
+		
+		Comparator<Course> comparingByName = Comparator.comparing(Course::getName);  
+		
+		System.out.println("comparetor on name of string  asc list order" +
+				courses.stream()
+				.sorted(comparingByName)
+				.collect(Collectors.toList()));
+	// 	comparing(string) , comparingDouble​	, comparingInt , comparingLong​ //on data type to function reference change 
+	//  cascaded sort on multiple filed where comparing then thencomparing
+	//	thenComparing (string),thenComparingInt(int),thenComparingDouble​(Double​),thenComparingLong(Long)​
+		Comparator<Course> comparingByNoOfStudentsAndNoOfReviews 
+				= Comparator.comparingInt(Course::getNoOfStudents)
+							//.thenComparingInt(Course::getReviewScore).reversed() //-> this will be desc on this field
+							.thenComparingInt(Course::getReviewScore)
+							.thenComparing(Course::getName)
+							.reversed();
+
+		System.out.println("cascaded sort on multiple fiedl"+ 
+				courses.stream()
+				.sorted(comparingByNoOfStudentsAndNoOfReviews)
+				.collect(Collectors.toList()));
+	//Limit will limit the size of the list 	
+		List<Course> collect = courses.stream()
+		.sorted(comparingByNoOfStudentsAndNoOfReviews)
+		.limit(2)
+		.collect(Collectors.toList());
+	// from here we can put get (1),(0) to fetch 2nd 3rd highest or lowest sorted data element 	
+		System.out.println("cascaded sort on multiple fiedl but one fetch"+
+				collect.get(1));
+		
+	// normal list which will be generated by this  head 3 elements will be removed off 	
+		System.out.println("skip in action "+
+				courses.stream()
+				.sorted(comparingByNoOfStudentsAndNoOfReviews)
+				.skip(3)
+				.collect(Collectors.toList()));
+	
+	// 1st skip will skip 3 records from head and then almost 5 records will be picked 	
+		System.out.println("limit and skip in action"+
+				courses.stream()
+				.sorted(comparingByNoOfStudentsAndNoOfReviews)
+				.skip(3)
+				.limit(5)
+				.collect(Collectors.toList()));
+		
+		//------------------------------------------------------------------------------------
+		
+		//takeWhile is a cascaded filter which will work after any function which is befor before it 
+		//here after sort "course -> course.getReviewScore()>=95" this predicate is working 
+		
+		System.out.println("takeWhile in action "+
+			courses.stream().sorted(comparingByNoOfStudentsAndNoOfReviews)
+			     .takeWhile(course -> course.getReviewScore()>=95)
+			     .collect(Collectors.toList()));
+		// dropWhile will work reverse then the takeWhile the data elements in the stream not satisfy it will be collected 
+
+		System.out.println("doWhile in action " +
+				courses.stream()
+				     .dropWhile(course -> course.getReviewScore()>=95)
+				     .collect(Collectors.toList()));
+		//------------------------------------------------------------------------------------
+        // max min with filtes optional or-else 
+		System.out.println(
+				courses.stream()
+				.max(comparingByNoOfStudentsAndNoOfReviews));
+		//Optional[FullStack:14000:91]
+
+		System.out.println(
+				courses.stream()
+				.min(comparingByNoOfStudentsAndNoOfReviews)
+				.orElse(new Course("Kubernetes", "Cloud", 91, 20000))
+				);
+				
+		//Optional[Microservices:25000:96]
+		//Microservices:25000:96
+	
+		System.out.println(
+			courses.stream()
+			.filter(reviewScoreLessThan90Predicate)
+			.min(comparingByNoOfStudentsAndNoOfReviews)
+			.orElse(new Course("Kubernetes", "Cloud", 91, 20000))
+				);
+		//Optional.empty
+		//Kubernetes:20000:91
+		
+		System.out.println(
+				courses.stream()
+				.filter(reviewScoreLessThan90Predicate)
+				.findFirst()
+					);//Optional.empty
+		
+
+		System.out.println(
+				courses.stream()
+				.filter(reviewScoreGreaterThan95Predicate)
+				.findFirst()
+					);//Optional[Spring:20000:98]
+
+		System.out.println(
+				courses.stream()
+				.filter(reviewScoreGreaterThan95Predicate)
+				.findAny()
+					);//Optional[Spring:20000:98]
+
+		System.out.println(
+				courses.stream()
+				.filter(reviewScoreGreaterThan95Predicate)
+				.mapToInt(Course::getNoOfStudents)
+				.sum());//88000
+
+		System.out.println(
+				courses.stream()
+				.filter(reviewScoreGreaterThan95Predicate)
+				.mapToInt(Course::getNoOfStudents)
+				.average());//OptionalDouble[22000.0]
+
+		System.out.println(
+				courses.stream()
+				.filter(reviewScoreGreaterThan95Predicate)
+				.mapToInt(Course::getNoOfStudents)
+				.count());//4
+
+		System.out.println(
+				courses.stream()
+				.filter(reviewScoreGreaterThan95Predicate)
+				.mapToInt(Course::getNoOfStudents)
+				.max());//OptionalInt[25000]
+		
+		
+//-------------------------------------------------------------------------------------------
+		
+		// Grouping groupingBy(Course::getCategory) -< this is key .The collector produces a Map<K, List<T>> 
+		Map<String, List<Course>> collect2 = courses.stream()
+		.collect(Collectors.groupingBy(Course::getCategory));
+		System.out.println("group with Category" + collect2);
+		
+		// Grouping with multiple fields both the key must be in same object type
+	 Map<String, Map<String, List<Course>>> collect3 = courses.stream()
+				.collect(Collectors.groupingBy(Course::getCategory,Collectors.groupingBy(Course::getName)));
+	 System.out.println("group with Category and name " + collect3);
+		
+	 // summingInt sum the count on group , same for the count
+	 Map<String, Integer> collect15 = courses.stream()
+		.collect(Collectors.groupingBy(Course::getCategory, Collectors.summingInt(Course::getNoOfStudents)));
+	 System.out.println("group with sum for individual  " +
+			 collect15);
+	 System.out.println("group with count"+
+				courses.stream()
+				.collect(Collectors.groupingBy(Course::getCategory, Collectors.counting())));	
+    // group on the key and from that group element filter out max one 
+	 Map<String, Optional<Course>> collect14 = courses.stream()
+		.collect(Collectors.groupingBy(Course::getCategory, 
+				Collectors.maxBy(Comparator.comparing(Course::getReviewScore))));
+		System.out.println("max by over group "+
+				collect14);
+	//given a stream of numbers of students , to accumulate for  each catagory type  
+		Map<String, List<Integer>> collect4 = courses.stream()
+		.collect(Collectors.groupingBy(Course::getCategory, 
+				Collectors.mapping(Course::getNoOfStudents, Collectors.toList())));	
+
+		System.out.println("list of :"+ collect4
+				);
+//--------------------------------------------------------------------------------		
+		
+		Predicate<Course> reviewScoreGreaterThan95Predicate2 
+						= createPredicateWithCutoffReviewScore(95);
+
+		Predicate<Course> reviewScoreGreaterThan90Predicate2 
+						= createPredicateWithCutoffReviewScore(90);
+
+	}
+
+	private static Predicate<Course> createPredicateWithCutoffReviewScore(int cutoffReviewScore) {
+		return course -> course.getReviewScore() > cutoffReviewScore;
+	}
+	
+
+}
